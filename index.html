@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What time is it?</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #2A3B4D;
+    color: #FF6F61;
+  }
+  .container {
+    width: 75%;
+    max-width: 600px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    border-radius: 2rem;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .progress-container {
+    width: 100%;
+    background-color: #2A3B4D;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .progress-bar {
+    height: 10px;
+    width: 0;
+    background-color: #ffffff77;
+  }
+  .progress-text {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  .progress-text > div {
+    padding: 0.25rem;
+  }
+  .footer {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    background-color: transparent;
+  }
+  .github-link {
+    color: white;
+    text-decoration: none;
+  }
+  .github-logo {
+    width: 2rem;
+    height: 2rem;
+    margin-top: 5px;
+  }
+  .static-text {
+    color: white;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="progress-text">
+    <div id="dateText" class="static-text">The current year is <span id="yearNumber"></span></div>
+    <div id="dayCountText" class="static-text">This is the</div>
+    <div id="dayNumberText" class="static-text">Current day number out of 365:</div>
+    <div id="utcTimeText" class="static-text">Current time (UTC):</div>
+    <div id="locationText" class="static-text">Detected location:</div>
+    <div id="localTimeText" class="static-text">Local time:</div>
+    <div id="dstText" class="static-text">Daylight savings time:</div>
+  </div>
+</div>
+<div class="footer">
+  <a href="https://github.com/trevorsmale" target="_blank" class="github-link">
+    <img class="github-logo" src="https://upload.wikimedia.org/wikipedia/commons/2/24/Github_logo_svg.svg" alt="GitHub">
+  </a>
+</div>
+
+<script>
+  // Calculate days completed in the current year
+  function updateProgressBar() {
+    const today = new Date();
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    const daysInYear = Math.floor((today - startOfYear) / (24 * 60 * 60 * 1000));
+    const percentage = (daysInYear / 365) * 100;
+
+    // Update progress bar width
+    const progressBar = document.getElementById("progressBar");
+    progressBar.style.width = `${percentage}%`;
+
+    // Update day count text
+    const dayCountText = document.getElementById("dayCountText");
+    const dayOfMonth = today.getDate();
+    const dayOrdinal = getDayOrdinal(dayOfMonth); // Get the ordinal indicator
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    dayCountText.innerHTML = `This is the ${dayOfMonth}${dayOrdinal} day out of ${daysInMonth} days this month.`;
+
+    // Update day number text
+    const dayNumberText = document.getElementById("dayNumberText");
+    const dayOfYear = daysInYear + 1;
+    const dayOfYearOrdinal = getDayOrdinal(dayOfYear); // Get the ordinal indicator
+    dayNumberText.innerHTML = `The ${dayOfYear}${dayOfYearOrdinal} Day of 365 (${percentage.toFixed(2)}% completed).`;
+
+    // Update UTC and local time text
+    const utcTimeText = document.getElementById("utcTimeText");
+    const localTimeText = document.getElementById("localTimeText");
+    const locationText = document.getElementById("locationText"); // Get the location element
+    const currentTime = new Date();
+    const utcTimeString = currentTime.toISOString().substr(11, 8);
+    const localTimeString = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+    const timeZoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const timeZoneAbbreviation = currentTime.toLocaleTimeString('en-us', { timeZoneName: 'short' }).split(' ')[2];
+    utcTimeText.innerHTML = `Current time (UTC): ${utcTimeString}`;
+    localTimeText.innerHTML = `Local time: ${localTimeString} ${timeZoneAbbreviation}`; // Update local time with abbreviation
+    locationText.innerHTML = `Detected location: ${timeZoneName}`; // Update detected location
+
+    // Update daylight savings time text
+    const dstText = document.getElementById("dstText");
+    const isDST = new Date().getTimezoneOffset() < new Date(today.getFullYear(), 0, 1).getTimezoneOffset();
+    const dstStatus = isDST ? 'observed' : 'not observed';
+    const dstEffect = isDST ? 'in effect' : 'not in effect';
+    dstText.innerHTML = `Daylight savings time: ${dstStatus} and ${dstEffect}.`;
+
+    requestAnimationFrame(updateProgressBar);
+  }
+
+  // Helper function to get the ordinal indicator
+  function getDayOrdinal(day) {
+    if (day >= 11 && day <= 13) {
+      return "th";
+    }
+    switch (day % 10) {
+      case 1:
+        return "st";
+      case 2:
+        return "nd";
+      case 3:
+        return "rd";
+      default:
+        return "th";
+    }
+  }
+
+  // Update current year number
+  const yearNumber = document.getElementById("yearNumber");
+  yearNumber.innerHTML = new Date().getFullYear();
+
+  updateProgressBar();
+</script>
+</body>
